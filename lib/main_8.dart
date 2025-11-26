@@ -125,20 +125,6 @@ void main() {
   final modelNotifier = ValueNotifier(CounterModel(0));
   modelNotifier.addListener(() => db.saveCounter(modelNotifier.value.counter));
 
-  // runApp(
-  //   ValueListenableBuilder(
-  //     valueListenable: modelNotifier,
-  //     builder: (_, __, ___) => MaterialApp(
-  //       initialRoute: '/',
-  //       routes: {
-  //         '/' : (_) => CounterUpView(model: modelNotifier.value, controller: CounterUpController(modelNotifier.value, (newValue) => modelNotifier.value = newValue)),
-  //         '/down': (_) => CounterDownView(model: modelNotifier.value, controller: CounterDownController(modelNotifier.value, (newValue) => modelNotifier.value = newValue)),
-  //       },
-  //     ),
-  //   ),
-  // );
-
-  debugPrint('Creating RoutingAndControllerConfig');
   final config = RoutingAndControllerConfig(
     modelNotifier,
     {
@@ -152,7 +138,7 @@ void main() {
       ),
     }
   );
-  debugPrint('Running app from config');
+
   runApp(config.buildApp());
 }
 
