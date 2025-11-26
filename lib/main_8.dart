@@ -66,12 +66,18 @@ class ViewAndControllerPair<Model> {
   ViewAndControllerPair({required this.viewBuilder, required this.controllerBuilder});
 }
 
-// A generalized configuration class to build the app
-class RoutingAndControllerConfig<Model> {
+//
+class AppConfig<Model> {
+
   ValueNotifier<Model> modelNotifier;//Model can be any type
   Map<String, ViewAndControllerPair<Model>> routesToViewsAndControllers;
-  RoutingAndControllerConfig(this.modelNotifier, this.routesToViewsAndControllers);
+  
+  AppConfig(this.modelNotifier, this.routesToViewsAndControllers);
+}
 
+extension AppBuilder<Model> on AppConfig<Model> {
+
+  //build the MaterialApp with routes wired to views and controllers as per the config
   Widget buildApp() {
     debugPrint('Building app with modelNotifier: $modelNotifier');
     return ValueListenableBuilder(
@@ -125,7 +131,7 @@ void main() {
   final modelNotifier = ValueNotifier(CounterModel(0));
   modelNotifier.addListener(() => db.saveCounter(modelNotifier.value.counter));
 
-  final config = RoutingAndControllerConfig(
+  final config = AppConfig(
     modelNotifier,
     {
       '/' : ViewAndControllerPair<CounterModel>(
@@ -139,7 +145,7 @@ void main() {
     }
   );
 
-  runApp(config.buildApp());
+  runApp(AppBuilder(config).buildApp());
 }
 
 // ------------------- UI Layer: Views ------------------
