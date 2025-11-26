@@ -162,4 +162,3 @@ class PlusMinusFloatingActionButton extends StatelessWidget {
     child: Icon(onPlus != null ? Icons.add : Icons.remove),
   );
 }
-
