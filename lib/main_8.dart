@@ -66,19 +66,18 @@ class ViewAndControllerPair<Model> {
   ViewAndControllerPair({required this.viewBuilder, required this.controllerBuilder});
 }
 
-//
+//AppConfig holds the configuration of mapping of routes to views and controllers.
 class AppConfig<Model> {
 
-  ValueNotifier<Model> modelNotifier;//Model can be any type
   Map<String, ViewAndControllerPair<Model>> routesToViewsAndControllers;
   
-  AppConfig(this.modelNotifier, this.routesToViewsAndControllers);
+  AppConfig(this.routesToViewsAndControllers);
 }
 
 extension AppBuilder<Model> on AppConfig<Model> {
 
   //build the MaterialApp with routes wired to views and controllers as per the config
-  Widget buildApp() {
+  Widget buildApp(ValueNotifier<Model> modelNotifier) {
     debugPrint('Building app with modelNotifier: $modelNotifier');
     return ValueListenableBuilder(
       valueListenable: modelNotifier,
@@ -86,7 +85,7 @@ extension AppBuilder<Model> on AppConfig<Model> {
         debugPrint('UI updated triggered with model value: ${modelNotifier.value}');
         return MaterialApp(
           initialRoute: '/',
-          routes: buildRoutes()
+          routes: buildRoutes(modelNotifier)
         );
       }
     );
@@ -98,7 +97,7 @@ extension AppBuilder<Model> on AppConfig<Model> {
   //What controllers do onModelChanged (For now, they will all update the same modelNotifier)
   //convert ViewBuilder: F(M,C)=>W into WidgetBuilder: F(BuildContext)=>W
   //widgetBuilderN will return the correct view, and that view will have the correct controller wired in
-  Map<String, WidgetBuilder> buildRoutes() {
+  Map<String, WidgetBuilder> buildRoutes(ValueNotifier<Model> modelNotifier) {
     Map<String, ViewAndControllerPair<Model>> routesToViewsAndControllers = this.routesToViewsAndControllers;
     Map<String, WidgetBuilder> routes = {};
     debugPrint('Building routes map with keys: ${routesToViewsAndControllers.keys}');
@@ -132,7 +131,6 @@ void main() {
   modelNotifier.addListener(() => db.saveCounter(modelNotifier.value.counter));
 
   final config = AppConfig(
-    modelNotifier,
     {
       '/' : ViewAndControllerPair<CounterModel>(
         viewBuilder: (m, c) => CounterUpView(model: m, controller: c),
@@ -145,7 +143,7 @@ void main() {
     }
   );
 
-  runApp(AppBuilder(config).buildApp());
+  runApp(AppBuilder(config).buildApp(modelNotifier));
 }
 
 // ------------------- UI Layer: Views ------------------
