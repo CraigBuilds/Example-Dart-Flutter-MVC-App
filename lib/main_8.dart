@@ -98,7 +98,7 @@ class RoutingAndControllerConfig<Model> {
     debugPrint('Building routes map with keys: ${routesToViewsAndControllers.keys}');
     routesToViewsAndControllers.forEach((routeN, viewAndControllerBuilderN) {
       debugPrint('Wiring route $routeN');
-      final controllerBuilderN = viewAndControllerBuilderN.controllerBuilder; //"Error retrieving viewBuilder for route /: type '(CounterModel, CounterUpController) => CounterUpView' is not a subtype of type '(CounterModel, dynamic) => Widget'"
+      final controllerBuilderN = viewAndControllerBuilderN.controllerBuilder; //This line fails!!!! "Error retrieving viewBuilder for route /: type '(CounterModel, CounterUpController) => CounterUpView' is not a subtype of type '(CounterModel, dynamic) => Widget'"
       debugPrint('!');
       final ViewBuilder<Model, dynamic> viewBuilderN = viewAndControllerBuilderN.viewBuilder;
       debugPrint('Building widget builder for route $routeN');
