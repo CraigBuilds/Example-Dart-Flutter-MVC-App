@@ -56,27 +56,102 @@ class CounterDownController {
   }
 }
 
-// ------------------- Glue Layer ------------------
-// The application entry point is responsible for creating the domain model, creating the reactivity mechanism (ValueNotifier) that notifies the ValueListenableBuilder
-// of changes to the model, wiring together controllers to that reactivity mechanism, and defining the root widget of the widget tree (A MaterialApp with a home
-// page and routes). The home page and routes are "Views" (The main pages of our UI application), and Views have access to the domain model and an appropriate controller.
+// ------------------- Entry Point + Glue Layer ------------------
+
+/// A generic class that wires together the model, controllers, and views for a Flutter app.
+/// 
+/// [TModel] is the type of the model.
+/// This class manages loading and saving the model, building controllers and views,
+/// and setting up routing for the app.
+/// 
+/// You can specify any number of routes, each with its own controller and view builder.
+/// 
+/// Example usage:
+/// ```dart
+/// final wiring = AppWiring<MyModel>(
+///   loadModel: () async => ...,
+///   saveModel: (model) async => ...,
+///   routes: {
+///     '/': RouteConfig<MyModel, MyController>(
+///       controllerBuilder: (model, onChange) => ...,
+///       viewBuilder: (model, controller) => ...,
+///     ),
+///     '/other': RouteConfig<MyModel, OtherController>(
+///       controllerBuilder: (model, onChange) => ...,
+///       viewBuilder: (model, controller) => ...,
+///     ),
+///   },
+/// );
+/// wiring.run();
+/// ```
+class RouteConfig<TModel, TController> {
+  final TController Function(TModel, void Function(TModel)) controllerBuilder;
+  final Widget Function(TModel, TController) viewBuilder;
+
+  const RouteConfig({
+    required this.controllerBuilder,
+    required this.viewBuilder,
+  });
+}
+
+class AppWiring<TModel> {
+  final Future<TModel> Function() loadModel;
+  final Future<void> Function(TModel) saveModel;
+  final Map<String, RouteConfig<TModel, dynamic>> routes;
+
+  AppWiring({
+    required this.loadModel,
+    required this.saveModel,
+    required this.routes,
+  });
+
+  Future<void> run() async {
+    final model = await loadModel();
+    final notifier = ValueNotifier(model);
+    notifier.addListener(() => saveModel(notifier.value));
+
+    final controllers = <String, dynamic>{
+      for (final entry in routes.entries)
+        entry.key: entry.value.controllerBuilder(notifier.value, (newValue) => notifier.value = newValue),
+    };
+
+    runApp(
+      ValueListenableBuilder<TModel>(
+        valueListenable: notifier,
+        builder: (_, value, _) => MaterialApp(
+          initialRoute: routes.keys.first,
+          routes: {
+            for (final entry in routes.entries)
+              entry.key: (_) => entry.value.viewBuilder(value, controllers[entry.key]),
+          },
+        ),
+      ),
+    );
+  }
+}
 
 void main() async {
-  final db = DatabaseAccess();
-  final model = ValueNotifier(CounterModel(await db.loadCounter()));
-  model.addListener(() => db.saveCounter(model.value.counter));
-
-  runApp(
-    ValueListenableBuilder(
-      valueListenable: model,
-      builder: (_, __, ___) => MaterialApp(
-        home: CounterUpView(model: model.value, controller: CounterUpController(model.value, (newValue) => model.value = newValue)),
-        routes: {
-          '/down': (_) => CounterDownView(model: model.value, controller: CounterDownController(model.value, (newValue) => model.value = newValue)),
-        },
+  final wiring = AppWiring<CounterModel>(
+    loadModel: () async {
+      final db = DatabaseAccess();
+      return CounterModel(await db.loadCounter());
+    },
+    saveModel: (model) async {
+      final db = DatabaseAccess();
+      await db.saveCounter(model.counter);
+    },
+    routes: {
+      '/': RouteConfig<CounterModel, CounterUpController>(
+        controllerBuilder: (model, onChanged) => CounterUpController(model, onChanged),
+        viewBuilder: (model, controller) => CounterUpView(model: model, controller: controller),
       ),
-    ),
+      '/down': RouteConfig<CounterModel, CounterDownController>(
+        controllerBuilder: (model, onChanged) => CounterDownController(model, onChanged),
+        viewBuilder: (model, controller) => CounterDownView(model: model, controller: controller),
+      ),
+    },
   );
+  await wiring.run();
 }
 
 // ------------------- UI Layer: Views ------------------
