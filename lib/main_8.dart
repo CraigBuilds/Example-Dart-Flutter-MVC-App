@@ -143,11 +143,11 @@ void main() {
   final config = RoutingAndControllerConfig(
     modelNotifier,
     {
-      '/' : ViewAndControllerPair<CounterModel, CounterUpController>(
+      '/' : ViewAndControllerPair<CounterModel, dynamic>(
         viewBuilder: (m, c) => CounterUpView(model: m, controller: c),
         controllerBuilder: (m, c) => CounterUpController(m, c),
       ),
-      '/down' : ViewAndControllerPair<CounterModel, CounterDownController>(
+      '/down' : ViewAndControllerPair<CounterModel, dynamic>(
         viewBuilder: (m, c) => CounterDownView(model: m, controller: c),
         controllerBuilder: (m, c) => CounterDownController(m, c),
       ),
