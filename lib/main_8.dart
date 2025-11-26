@@ -66,7 +66,9 @@ class ViewAndControllerPair<Model> {
   ViewAndControllerPair({required this.viewBuilder, required this.controllerBuilder});
 }
 
-//AppConfig holds the configuration of mapping of routes to views and controllers.
+// AppConfig holds the mapping of routes to views, and views to controllers.
+// It is used by the AppBuilder extension to build a MaterialApp with the routes wired to views, that rebuild when the model changes.
+// The view is automatically injected with the model and the appropriate controller, as per the config.
 class AppConfig<Model> {
 
   Map<String, ViewAndControllerPair<Model>> routesToViewsAndControllers;
@@ -74,6 +76,10 @@ class AppConfig<Model> {
   AppConfig(this.routesToViewsAndControllers);
 }
 
+// AppBuilder is an extension on AppConfig that builds a MaterialApp with the routes wired to views, as per the config. The views rebuild when the modelNotifier 
+// value changes, and they are automatically injected with the model and the appropriate controller, as per the config. The controller is also injected with
+// the model, and an onModelChanged callback that updates the modelNotifier.
+// In the current implementation, all controllers update the same modelNotifier. This may be changed in the future to allow for more fine-grained reactivity.
 extension AppBuilder<Model> on AppConfig<Model> {
 
   //build the MaterialApp with routes wired to views and controllers as per the config
@@ -108,7 +114,7 @@ extension AppBuilder<Model> on AppConfig<Model> {
       debugPrint('Building widget builder for route $routeN');
       final widgetBuilderN = (_) {
         final model = modelNotifier.value;
-        final onChangedCallback = (newValue) => modelNotifier.value = newValue;
+        final onChangedCallback = (newValue) => modelNotifier.value = newValue; //currently all controllers update the same modelNotifier
         debugPrint('Building controller for route $routeN with model value: $model and onChangedCallback: $onChangedCallback');
         final controllerN = controllerBuilderN(model, onChangedCallback);
         debugPrint('Building view for route $routeN with model value: $model and controller: $controllerN');
