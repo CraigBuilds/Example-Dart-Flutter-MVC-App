@@ -60,8 +60,8 @@ class CounterDownController {
 
 typedef ViewBuilder<Model, Controller> = Widget Function(Model model, Controller controller);
 typedef ControllerBuilder<Model> = dynamic Function(Model model, void Function(Model newModel) onModelChanged);
-class ViewAndControllerPair<Model, Controller> {
-  final ViewBuilder<Model, Controller> viewBuilder;
+class ViewAndControllerPair<Model> {
+  final ViewBuilder<Model, dynamic> viewBuilder;
   final ControllerBuilder<Model> controllerBuilder;
   ViewAndControllerPair({required this.viewBuilder, required this.controllerBuilder});
 }
@@ -69,7 +69,7 @@ class ViewAndControllerPair<Model, Controller> {
 // A generalized configuration class to build the app
 class RoutingAndControllerConfig<Model> {
   ValueNotifier<Model> modelNotifier;//Model can be any type
-  Map<String, ViewAndControllerPair<Model, dynamic>> routesToViewsAndControllers;
+  Map<String, ViewAndControllerPair<Model>> routesToViewsAndControllers;
   RoutingAndControllerConfig(this.modelNotifier, this.routesToViewsAndControllers);
 
   Widget buildApp() {
@@ -93,7 +93,7 @@ class RoutingAndControllerConfig<Model> {
   //convert ViewBuilder: F(M,C)=>W into WidgetBuilder: F(BuildContext)=>W
   //widgetBuilderN will return the correct view, and that view will have the correct controller wired in
   Map<String, WidgetBuilder> buildRoutes() {
-    Map<String, ViewAndControllerPair<Model, dynamic>> routesToViewsAndControllers = this.routesToViewsAndControllers;
+    Map<String, ViewAndControllerPair<Model>> routesToViewsAndControllers = this.routesToViewsAndControllers;
     Map<String, WidgetBuilder> routes = {};
     debugPrint('Building routes map with keys: ${routesToViewsAndControllers.keys}');
     routesToViewsAndControllers.forEach((routeN, viewAndControllerBuilderN) {
@@ -142,11 +142,11 @@ void main() {
   final config = RoutingAndControllerConfig(
     modelNotifier,
     {
-      '/' : ViewAndControllerPair<CounterModel, dynamic>(
+      '/' : ViewAndControllerPair<CounterModel>(
         viewBuilder: (m, c) => CounterUpView(model: m, controller: c),
         controllerBuilder: (m, c) => CounterUpController(m, c),
       ),
-      '/down' : ViewAndControllerPair<CounterModel, dynamic>(
+      '/down' : ViewAndControllerPair<CounterModel>(
         viewBuilder: (m, c) => CounterDownView(model: m, controller: c),
         controllerBuilder: (m, c) => CounterDownController(m, c),
       ),
